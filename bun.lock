@@ -5,8 +5,8 @@
     "": {
       "name": "x-english",
       "devDependencies": {
-        "oxfmt": "^0.28.0",
-        "oxlint": "^1.43.0",
+        "oxfmt": "catalog:",
+        "oxlint": "catalog:",
       },
     },
     "apps/extension": {
@@ -18,8 +18,8 @@
       },
       "devDependencies": {
         "@types/chrome": "^0.1.36",
-        "oxlint": "^1.43.0",
-        "typescript": "^5.9.3",
+        "oxlint": "catalog:",
+        "typescript": "catalog:",
         "wxt": "^0.20.14",
       },
     },
@@ -35,15 +35,16 @@
       },
       "devDependencies": {
         "@cloudflare/workers-types": "^4.20260207.0",
-        "oxlint": "^1.43.0",
-        "typescript": "^5.9.3",
+        "oxlint": "catalog:",
+        "typescript": "catalog:",
         "wrangler": "^4.63.0",
       },
     },
-    "packages/shared": {
-      "name": "@xenglish/shared",
-      "version": "0.1.0",
-    },
+  },
+  "catalog": {
+    "oxfmt": "^0.28.0",
+    "oxlint": "^1.43.0",
+    "typescript": "^5.9.3",
   },
   "packages": {
     "@1natsu/wait-element": ["@1natsu/wait-element@4.1.2", "", { "dependencies": { "defu": "^6.1.4", "many-keys-map": "^2.0.1" } }, "sha512-qWxSJD+Q5b8bKOvESFifvfZ92DuMsY+03SBNjTO34ipJLP6mZ9yK4bQz/vlh48aEQXoJfaZBqUwKL5BdI5iiWw=="],
@@ -359,8 +360,6 @@
     "@wxt-dev/storage": ["@wxt-dev/storage@1.2.6", "", { "dependencies": { "@wxt-dev/browser": "^0.1.4", "async-mutex": "^0.5.0", "dequal": "^2.0.3" } }, "sha512-f6AknnpJvhNHW4s0WqwSGCuZAj0fjP3EVNPBO5kB30pY+3Zt/nqZGqJN6FgBLCSkYjPJ8VL1hNX5LMVmvxQoDw=="],
 
     "@xenglish/extension": ["@xenglish/extension@workspace:apps/extension"],
-
-    "@xenglish/shared": ["@xenglish/shared@workspace:packages/shared"],
 
     "@xenglish/worker": ["@xenglish/worker@workspace:apps/worker"],
 

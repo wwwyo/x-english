@@ -1,0 +1,24 @@
+{
+  "name": "@xenglish/extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
+    "build": "wxt build",
+    "zip": "wxt zip",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint --deny-warnings entrypoints src wxt.config.ts"
+  },
+  "dependencies": {
+    "@elysiajs/eden": "^1.4.6",
+    "@xenglish/worker": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.1.36",
+    "oxlint": "catalog:",
+    "typescript": "catalog:",
+    "wxt": "^0.20.14"
+  }
+}
