@@ -1,4 +1,7 @@
 node_modules
-.output
-.wxt
+bun.lockb
+apps/*/.output
+apps/*/.wxt
+apps/*/dist
 dist
+.DS_Store
