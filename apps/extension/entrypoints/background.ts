@@ -4,8 +4,7 @@ import {
   DEFAULT_MODEL,
   SYSTEM_DAILY_LIMIT,
   type Chunk,
-  type WorkerErrorResponse,
-  type WorkerResponse,
+  type WorkerErrorBody,
 } from "@xenglish/worker/contracts";
 import { DEFAULT_WORKER_BASE_URL } from "../src/constants";
 import {
@@ -123,7 +122,7 @@ async function callProcessApi(input: {
     model: input.settings.model,
     $headers: buildWorkerHeaders(input.settings),
   });
-  const data = unwrapWorkerResponse(response);
+  const data = unwrapWorkerResponse<ProcessResult>(response);
   return {
     englishText: normalizeWhitespace(data.englishText),
     chunks: sanitizeChunks(data.chunks, input.text),
@@ -140,7 +139,7 @@ async function callAskApi(input: {
     model: input.settings.model,
     $headers: buildWorkerHeaders(input.settings),
   });
-  const data = unwrapWorkerResponse(response);
+  const data = unwrapWorkerResponse<AskResult>(response);
   return {
     answer: normalizeWhitespace(data.answer),
   };
@@ -159,47 +158,47 @@ function buildWorkerHeaders(settings: StoredSettings): Record<string, string> {
 }
 
 function unwrapWorkerResponse<T>(response: {
-  data: WorkerResponse<T> | null;
+  data: T | WorkerErrorBody | null;
   error: {
+    status: number;
     value: unknown;
   } | null;
 }): T {
   if (response.error) {
-    throw new Error(getWorkerErrorMessage(response.error.value));
+    throw new Error(getWorkerErrorMessage(response.error.status, response.error.value));
   }
 
   if (!response.data) {
     throw new Error("xEnglish APIエラー: レスポンスが空です。");
   }
 
-  if (!response.data.ok) {
-    throw new Error(getWorkerErrorMessage(response.data.error));
+  if (isWorkerErrorBody(response.data)) {
+    throw new Error(getWorkerErrorMessage(500, response.data));
   }
-
-  return response.data.result;
+  return response.data;
 }
 
-function getWorkerErrorMessage(error: unknown): string {
-  if (isRateLimitError(error)) {
+function getWorkerErrorMessage(status: number, error: unknown): string {
+  if (status === 429 && isRateLimitError(error)) {
     return `本日のシステム利用上限(${SYSTEM_DAILY_LIMIT}件)に達しました。OptionsでBYOKを設定してください。`;
   }
 
-  if (isWorkerErrorResponse(error)) {
+  if (isWorkerErrorBody(error)) {
     return error.message || "xEnglish APIエラー";
   }
-  return "xEnglish APIエラー";
+  return `xEnglish APIエラー (${status})`;
 }
 
-function isWorkerErrorResponse(error: unknown): error is WorkerErrorResponse["error"] {
+function isWorkerErrorBody(error: unknown): error is WorkerErrorBody {
   if (!error || typeof error !== "object") {
     return false;
   }
-  const value = error as Partial<WorkerErrorResponse["error"]>;
+  const value = error as Partial<WorkerErrorBody>;
   return typeof value.code === "string";
 }
 
 function isRateLimitError(error: unknown): boolean {
-  return isWorkerErrorResponse(error) && error.code === "RATE_LIMIT_EXCEEDED";
+  return isWorkerErrorBody(error) && error.code === "RATE_LIMIT_EXCEEDED";
 }
 
 async function loadSettings(): Promise<StoredSettings> {

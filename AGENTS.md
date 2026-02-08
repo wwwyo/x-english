@@ -9,6 +9,6 @@
 - 拡張の読み込み先は `apps/extension/.output/chrome-mv3/`。
 - AI呼び出しは Worker 側の `AI SDK` 経由で実装し、拡張側から直接 OpenAI API を叩かない。
 - Extension と Worker の通信は Elysia Eden Treaty の型付きRPCを使う。
-- システムキー利用には `50件/1日` の制限を維持する。
+- システムキー利用には `50件/1日/(IP + clientId)` の制限を Durable Objects で維持する。
 - BYOKキーは `chrome.storage.local` 保存のため、コメント・ドキュメントで非推奨であることを明記する。
 - Xの投稿テキストは `textContent` で扱い、HTML挿入をしない。

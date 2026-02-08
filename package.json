@@ -6,6 +6,7 @@
   ],
   "type": "module",
   "scripts": {
+    "dev": "bun run dev:worker & bun run dev:extension & wait",
     "dev:extension": "bun run --cwd apps/extension dev",
     "dev:worker": "bun run --cwd apps/worker dev",
     "build:extension": "bun run --cwd apps/extension build",
