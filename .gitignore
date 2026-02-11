@@ -2,6 +2,9 @@ node_modules
 bun.lockb
 apps/*/.output
 apps/*/.wxt
+apps/*/.wrangler
 apps/*/dist
 dist
 .DS_Store
+.dev.vars
+.env

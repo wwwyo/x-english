@@ -6,7 +6,7 @@ import {
   type Chunk,
   type WorkerErrorBody,
 } from "@xenglish/worker/contracts";
-import { DEFAULT_WORKER_BASE_URL } from "../src/constants";
+import { DEFAULT_WORKER_BASE_URL } from "../src/env";
 import {
   isRuntimeMessage,
   type AskPayload,

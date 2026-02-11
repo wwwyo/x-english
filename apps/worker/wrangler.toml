@@ -1,0 +1,16 @@
+name = "xenglish-api"
+main = "src/index.ts"
+compatibility_date = "2026-02-07"
+workers_dev = true
+
+[vars]
+OPENAI_API_KEY="your-openai-api-key"
+RATE_LIMIT_SALT="your-rate-limit-salt"
+
+[[durable_objects.bindings]]
+name = "RATE_LIMITER"
+class_name = "RateLimitDurableObject"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["RateLimitDurableObject"]

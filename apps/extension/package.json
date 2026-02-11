@@ -19,6 +19,7 @@
     "@types/chrome": "^0.1.36",
     "oxlint": "catalog:",
     "typescript": "catalog:",
+    "vite": "^7.3.1",
     "wxt": "^0.20.14"
   }
 }

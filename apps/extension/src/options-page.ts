@@ -1,5 +1,5 @@
 import { DEFAULT_MODEL, SYSTEM_DAILY_LIMIT } from "@xenglish/worker/contracts";
-import { DEFAULT_WORKER_BASE_URL } from "./constants";
+import { DEFAULT_WORKER_BASE_URL } from "./env";
 
 const apiKeyInput = getInputById("apiKey");
 const modelInput = getInputById("model");
