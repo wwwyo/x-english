@@ -16,10 +16,7 @@ export const askBodySchema = t.Object({
 
 type AskBody = Static<typeof askBodySchema>;
 
-export async function answerQuestion(input: {
-  apiKey: string;
-  body: AskBody;
-}): Promise<AskResult> {
+export async function answerQuestion(input: { apiKey: string; body: AskBody }): Promise<AskResult> {
   const apiKey = input.apiKey;
 
   const openai = createOpenAI({ apiKey });
@@ -40,7 +37,7 @@ export async function answerQuestion(input: {
       prompt: buildQuestionPrompt(payload),
       providerOptions: {
         openai: {
-          reasoningEffort: 'minimal',
+          reasoningEffort: "minimal",
         } satisfies OpenAIResponsesProviderOptions,
       },
     });

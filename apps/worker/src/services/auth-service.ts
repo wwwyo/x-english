@@ -54,7 +54,9 @@ async function consumeDailyRateLimit(input: {
 
   if (!response.ok) {
     const detail = await response.text().catch(() => "");
-    console.warn(`[consumeDailyRateLimit] Rate limit exceeded: status=${response.status} detail=${detail}`);
+    console.warn(
+      `[consumeDailyRateLimit] Rate limit exceeded: status=${response.status} detail=${detail}`,
+    );
     throw new ApiError("RATE_LIMIT_EXCEEDED", "1日のシステム利用上限に達しました。", 429, {
       remaining: 0,
       limit: SYSTEM_DAILY_LIMIT,

@@ -41,7 +41,9 @@ export class RateLimitDurableObject implements DurableObject {
     const ipLimit = normalizePositiveInt(body.ipLimit);
 
     if (!day || !clientHash || pairLimit <= 0 || ipLimit <= 0) {
-      console.info(`[RateLimitDO] Invalid params: day=${body.day} clientHash=${body.clientHash ? "[set]" : "[empty]"} pairLimit=${body.pairLimit} ipLimit=${body.ipLimit}`);
+      console.info(
+        `[RateLimitDO] Invalid params: day=${body.day} clientHash=${body.clientHash ? "[set]" : "[empty]"} pairLimit=${body.pairLimit} ipLimit=${body.ipLimit}`,
+      );
       return Response.json({ error: "bad_request" }, { status: 400 });
     }
 

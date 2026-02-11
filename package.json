@@ -1,7 +1,7 @@
 {
   "name": "x-english",
-  "license": "MIT",
   "private": true,
+  "license": "MIT",
   "workspaces": [
     "apps/*"
   ],
@@ -16,7 +16,8 @@
     "typecheck": "bun run --cwd apps/extension typecheck && bun run --cwd apps/worker typecheck",
     "lint": "bun run --cwd apps/extension lint && bun run --cwd apps/worker lint",
     "format": "oxfmt --write .",
-    "format:check": "oxfmt --check ."
+    "format:check": "oxfmt --check .",
+    "preflight": "bun run lint && bun run format:check && bun run typecheck"
   },
   "devDependencies": {
     "oxfmt": "catalog:",

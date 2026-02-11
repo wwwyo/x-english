@@ -12,16 +12,22 @@ export const processBodySchema = t.Object({
 
 type ProcessBody = Static<typeof processBodySchema>;
 
-const processOutputSchema = t.Object({
-  english_text: t.String({ minLength: 1 }),
-  chunks: t.Array(
-    t.Object({
-      text: t.String({ minLength: 1 }),
-      ja: t.String({ minLength: 1 }),
-    }, { additionalProperties: false }),
-    { minItems: 1 },
-  ),
-}, { additionalProperties: false });
+const processOutputSchema = t.Object(
+  {
+    english_text: t.String({ minLength: 1 }),
+    chunks: t.Array(
+      t.Object(
+        {
+          text: t.String({ minLength: 1 }),
+          ja: t.String({ minLength: 1 }),
+        },
+        { additionalProperties: false },
+      ),
+      { minItems: 1 },
+    ),
+  },
+  { additionalProperties: false },
+);
 
 type ProcessOutput = Static<typeof processOutputSchema>;
 
@@ -83,7 +89,7 @@ async function generateProcessOutput(input: {
       prompt: input.prompt,
       providerOptions: {
         openai: {
-          reasoningEffort: 'minimal',
+          reasoningEffort: "minimal",
         } satisfies OpenAIResponsesProviderOptions,
       },
       output: Output.object({
