@@ -16,6 +16,7 @@
     "@xenglish/worker": "workspace:*"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260210.0",
     "@types/chrome": "^0.1.36",
     "oxlint": "catalog:",
     "typescript": "catalog:",

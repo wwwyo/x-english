@@ -29,7 +29,7 @@ export const app = new Elysia({
     }
     console.error("[onError] Unhandled:", error);
     set.status = 500;
-    return { code: "INTERNAL_ERROR", message: String(error) };
+    return toErrorBody(new ApiError("INTERNAL_ERROR", String(error), 500));
   })
   .get("/health", () => ({ ok: true }))
   .derive(async ({ headers }) => ({
