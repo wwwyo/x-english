@@ -1,0 +1,36 @@
+[tools]
+bun = "1.3.4"
+
+[tasks.setup]
+description = "プロジェクトの環境構築を行う"
+depends = ["install", "gen:env"]
+
+[tasks.install]
+description = "依存パッケージをインストール"
+run = "bun install"
+
+[tasks."gen:env"]
+description = "開発用の環境変数ファイルを生成"
+run = """
+#!/usr/bin/env bash
+set -euo pipefail
+
+generate() {
+  local file="$1"
+  shift
+  if [ -f "$file" ]; then
+    echo "✓ $file already exists, skipping"
+    return
+  fi
+  echo "Generating $file ..."
+  printf '%s\n' "$@" > "$file"
+  echo "✓ $file created"
+}
+
+generate "apps/worker/.dev.vars" \
+  "OPENAI_API_KEY=your-openai-api-key" \
+  "RATE_LIMIT_SALT=change-this-salt"
+
+echo ""
+echo "NOTE: apps/worker/.dev.vars の OPENAI_API_KEY を設定してください"
+"""

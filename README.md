@@ -15,45 +15,21 @@ X(Twitter)の投稿を英語学習向けに変換する拡張機能です。
 
 ## セットアップ（ローカル）
 
-1. Bun を用意
-2. 依存関係をインストール
-3. Worker と Extension を同時起動
+1. [mise](https://mise.jdx.dev/) をインストール
+2. セットアップを実行（依存インストール + `.dev.vars` 生成）
+3. 生成された `apps/worker/.dev.vars` の `OPENAI_API_KEY` を設定
+4. 開発サーバーを起動
 
 ```bash
-bun install
+mise trust && mise run setup
+# OPENAI_API_KEY を設定後
 bun run dev
 ```
 
-4. Chrome の `chrome://extensions` を開く
-5. 「デベロッパーモード」を ON
-6. `apps/extension/.output/chrome-mv3/` を読み込む
-7. 拡張の `Details` -> `Extension options` を開く
-8. `Worker Base URL`（例: `https://xenglish-api.<subdomain>.workers.dev`）を設定
-
-## Cloudflare Worker 設定
-
-1. `apps/worker/wrangler.toml` の `RATE_LIMIT_SALT` を本番値に変更
-2. システムプロバイダキーを secret 設定
-3. `wrangler.toml` の Durable Object migration (`RateLimitDurableObject`) を維持したまま deploy
-
-```bash
-bun run --cwd apps/worker deploy
-# 初回は以下も実行
-wrangler secret put OPENAI_API_KEY --cwd apps/worker
-```
-
-## 開発コマンド（ルート）
-
-- `bun run dev`
-- `bun run dev:extension`
-- `bun run dev:worker`
-- `bun run build:extension`
-- `bun run build:worker`
-- `bun run zip:extension`
-- `bun run typecheck`
-- `bun run lint`
-- `bun run format`
-- `bun run format:check`
+5. Chrome の `chrome://extensions` を開く
+6. 「デベロッパーモード」を ON
+7. `apps/extension/.output/chrome-mv3/` を読み込む
+8. 拡張の `Details` -> `Extension options` を開く
 
 ## ファイル構成
 

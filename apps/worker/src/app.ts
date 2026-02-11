@@ -11,7 +11,7 @@ export const app = new Elysia({
 })
   .use(
     cors({
-      origin: true,
+      origin: ["https://x.com", "https://twitter.com"],
       methods: ["GET", "POST", "OPTIONS"],
       allowedHeaders: ["content-type", "x-client-id", "x-byok-key"],
     }),
