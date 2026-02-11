@@ -18,10 +18,10 @@ const processOutputSchema = t.Object({
     t.Object({
       text: t.String({ minLength: 1 }),
       ja: t.String({ minLength: 1 }),
-    }),
+    }, { additionalProperties: false }),
     { minItems: 1 },
   ),
-});
+}, { additionalProperties: false });
 
 type ProcessOutput = Static<typeof processOutputSchema>;
 
