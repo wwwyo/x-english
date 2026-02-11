@@ -36,6 +36,7 @@ export async function processTweet(input: {
   const normalizedText = normalizeWhitespace(input.body.text);
 
   if (!normalizedText) {
+    console.info("[processTweet] Empty text received");
     throw new ApiError("BAD_REQUEST", "text が空です。", 400);
   }
 
@@ -93,8 +94,10 @@ async function generateProcessOutput(input: {
     return output as ProcessOutput;
   } catch (error) {
     if (NoOutputGeneratedError.isInstance(error)) {
+      console.error("[generateProcessOutput] No output generated from LLM:", error);
       throw new ApiError("UPSTREAM_ERROR", "構造化出力の生成に失敗しました。", 502);
     }
+    console.error("[generateProcessOutput] LLM call failed:", error);
     throw error;
   }
 }

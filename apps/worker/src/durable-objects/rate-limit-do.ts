@@ -23,16 +23,25 @@ export class RateLimitDurableObject implements DurableObject {
 
   async fetch(request: Request): Promise<Response> {
     if (request.method !== "POST") {
+      console.info(`[RateLimitDO] Method not allowed: ${request.method}`);
       return Response.json({ error: "method_not_allowed" }, { status: 405 });
     }
 
-    const body = (await request.json()) as Partial<ConsumeRequest>;
+    let body: Partial<ConsumeRequest>;
+    try {
+      body = (await request.json()) as Partial<ConsumeRequest>;
+    } catch (error) {
+      console.info("[RateLimitDO] Failed to parse request body:", error);
+      return Response.json({ error: "bad_request" }, { status: 400 });
+    }
+
     const day = normalizeDay(body.day);
     const clientHash = normalizeHash(body.clientHash);
     const pairLimit = normalizePositiveInt(body.pairLimit);
     const ipLimit = normalizePositiveInt(body.ipLimit);
 
     if (!day || !clientHash || pairLimit <= 0 || ipLimit <= 0) {
+      console.info(`[RateLimitDO] Invalid params: day=${body.day} clientHash=${body.clientHash ? "[set]" : "[empty]"} pairLimit=${body.pairLimit} ipLimit=${body.ipLimit}`);
       return Response.json({ error: "bad_request" }, { status: 400 });
     }
 
@@ -48,6 +57,7 @@ export class RateLimitDurableObject implements DurableObject {
     const pairCurrent = Number(pairCurrentRaw || 0);
 
     if (ipCurrent >= ipLimit) {
+      console.warn(`[RateLimitDO] IP limit exceeded: current=${ipCurrent} limit=${ipLimit}`);
       const response: ConsumeResponse = {
         reason: "ip_limit",
         pairRemaining: Math.max(pairLimit - pairCurrent, 0),
@@ -57,6 +67,7 @@ export class RateLimitDurableObject implements DurableObject {
     }
 
     if (pairCurrent >= pairLimit) {
+      console.warn(`[RateLimitDO] Pair limit exceeded: current=${pairCurrent} limit=${pairLimit}`);
       const response: ConsumeResponse = {
         reason: "pair_limit",
         pairRemaining: 0,

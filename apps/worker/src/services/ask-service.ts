@@ -27,25 +27,31 @@ export async function answerQuestion(input: {
   const payload = input.body.payload;
 
   if (!normalizeWhitespace(payload.englishText) || !normalizeWhitespace(payload.question)) {
+    console.info("[answerQuestion] Missing required fields: englishText or question is empty");
     throw new ApiError("BAD_REQUEST", "質問に必要な情報が不足しています。", 400);
   }
 
-  const { text } = await generateText({
-    model: openai(model),
-    temperature: 0.2,
-    system:
-      "You are an English tutor for Japanese learners. Answer in Japanese, concise but clear. If the question asks meaning, explain nuance and one simple example.",
-    prompt: buildQuestionPrompt(payload),
-    providerOptions: {
-      openai: {
-        reasoningEffort: 'minimal',
-      } satisfies OpenAIResponsesProviderOptions,
-    },
-  });
+  try {
+    const { text } = await generateText({
+      model: openai(model),
+      temperature: 0.2,
+      system:
+        "You are an English tutor for Japanese learners. Answer in Japanese, concise but clear. If the question asks meaning, explain nuance and one simple example.",
+      prompt: buildQuestionPrompt(payload),
+      providerOptions: {
+        openai: {
+          reasoningEffort: 'minimal',
+        } satisfies OpenAIResponsesProviderOptions,
+      },
+    });
 
-  return {
-    answer: normalizeWhitespace(text),
-  };
+    return {
+      answer: normalizeWhitespace(text),
+    };
+  } catch (error) {
+    console.error("[answerQuestion] LLM call failed:", error);
+    throw error;
+  }
 }
 
 function buildQuestionPrompt(payload: AskPayload): string {

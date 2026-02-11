@@ -11,6 +11,7 @@ export async function resolveApiKey(headers: Record<string, string | undefined>)
 
   const clientId = normalizeWhitespace(headers["x-client-id"] || "");
   if (!clientId) {
+    console.info("[resolveApiKey] Missing x-client-id header");
     throw new ApiError("BAD_REQUEST", "x-client-id ヘッダが必要です。", 400);
   }
 
@@ -52,6 +53,8 @@ async function consumeDailyRateLimit(input: {
   });
 
   if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    console.warn(`[consumeDailyRateLimit] Rate limit exceeded: status=${response.status} detail=${detail}`);
     throw new ApiError("RATE_LIMIT_EXCEEDED", "1日のシステム利用上限に達しました。", 429, {
       remaining: 0,
       limit: SYSTEM_DAILY_LIMIT,

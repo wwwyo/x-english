@@ -18,6 +18,9 @@ export const app = new Elysia({
   )
   .onError(({ error, set }) => {
     if (error instanceof ApiError) {
+      if (error.status >= 500) {
+        console.error(`[onError] ApiError: status=${error.status} code=${error.code} message=${error.message}`, error.extra ?? "");
+      }
       set.status = error.status;
       return toErrorBody(error);
     }

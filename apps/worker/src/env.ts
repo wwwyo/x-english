@@ -11,10 +11,15 @@ function validateEnv(e: Record<string, unknown>): asserts e is Bindings {
   for (const key of required) {
     const val = e[key];
     if (key === "RATE_LIMITER") {
-      if (!val) throw new Error(`Missing env: ${key}`);
+      if (!val) {
+        console.error(`[validateEnv] Missing env binding: ${key}`);
+        throw new Error(`Missing env: ${key}`);
+      }
     } else {
-      if (typeof val !== "string" || val.length === 0)
+      if (typeof val !== "string" || val.length === 0) {
+        console.error(`[validateEnv] Missing or empty env: ${key}`);
         throw new Error(`Missing or empty env: ${key}`);
+      }
     }
   }
 }
