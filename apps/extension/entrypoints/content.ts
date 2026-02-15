@@ -266,7 +266,7 @@ function renderError(targetNode: HTMLElement, message: string): void {
   }
   const errorNode = document.createElement("span");
   errorNode.className = "xenglish-error";
-  errorNode.textContent = `xEnglish: ${message}`;
+  errorNode.textContent = `XEnglish: ${message}`;
   targetNode.appendChild(document.createElement("br"));
   targetNode.appendChild(errorNode);
 }

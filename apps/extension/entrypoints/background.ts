@@ -169,7 +169,7 @@ function unwrapWorkerResponse<T>(response: {
   }
 
   if (!response.data) {
-    throw new Error("xEnglish APIエラー: レスポンスが空です。");
+    throw new Error("XEnglish APIエラー: レスポンスが空です。");
   }
 
   if (isWorkerErrorBody(response.data)) {
@@ -180,13 +180,13 @@ function unwrapWorkerResponse<T>(response: {
 
 function getWorkerErrorMessage(status: number, error: unknown): string {
   if (status === 429 && isRateLimitError(error)) {
-    return `本日のシステム利用上限(${SYSTEM_DAILY_LIMIT}件)に達しました。OptionsでBYOKを設定してください。`;
+    return `本日のシステム利用上限(${SYSTEM_DAILY_LIMIT}件)に達しました。ポップアップからBYOKを設定してください。`;
   }
 
   if (isWorkerErrorBody(error)) {
-    return error.message || "xEnglish APIエラー";
+    return error.message || "XEnglish APIエラー";
   }
-  return `xEnglish APIエラー (${status})`;
+  return `XEnglish APIエラー (${status})`;
 }
 
 function isWorkerErrorBody(error: unknown): error is WorkerErrorBody {

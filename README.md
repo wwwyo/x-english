@@ -1,4 +1,4 @@
-# xEnglish
+# XEnglish
 
 X(Twitter)の投稿を英語学習向けに変換する拡張機能です。
 

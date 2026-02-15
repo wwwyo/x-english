@@ -9,7 +9,7 @@ export default defineConfig({
     const workerHost = `${new URL(workerBaseUrl).origin}/*`;
 
     return {
-      name: "xEnglish",
+      name: "XEnglish",
       description: "Xでつい無駄に感じてしまう時間を、有意義な英語学習の時間に変える拡張機能です。",
       permissions: ["storage"],
       host_permissions: [workerHost],
