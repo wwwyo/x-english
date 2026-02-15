@@ -11,9 +11,9 @@ const IN_FLIGHT_ATTR = "data-xenglish-in-flight";
 const ERROR_ATTR = "data-xenglish-error";
 const LOADING_CLASS = "xenglish-loading";
 const TARGET_SELECTOR = 'article [data-testid="tweetText"]';
-const CHUNK_SELECTOR = ".xenglish-chunk";
 
 const processingQueue: HTMLElement[] = [];
+const inFlightSet = new WeakSet<HTMLElement>();
 let queueBusy = false;
 
 export default defineContentScript({
@@ -26,9 +26,6 @@ export default defineContentScript({
 });
 
 function initContentScript(): void {
-  const tooltip = createTooltip();
-  document.documentElement.appendChild(tooltip.root);
-
   const observer = new MutationObserver(() => {
     scanAndEnqueue();
   });
@@ -47,14 +44,35 @@ function scanAndEnqueue(): void {
     if (!(node instanceof HTMLElement)) {
       continue;
     }
-    if (node.hasAttribute(PROCESSED_ATTR) || node.hasAttribute(IN_FLIGHT_ATTR)) {
+    if (inFlightSet.has(node)) {
       continue;
     }
+    if (isStillProcessed(node)) {
+      continue;
+    }
+
+    // Clean up any stale state from a previous processing cycle
+    node.removeAttribute(PROCESSED_ATTR);
+    node.removeAttribute(IN_FLIGHT_ATTR);
+    node.removeAttribute(ERROR_ATTR);
+    node.classList.remove(LOADING_CLASS);
+
+    inFlightSet.add(node);
     node.setAttribute(IN_FLIGHT_ATTR, "1");
     node.classList.add(LOADING_CLASS);
     processingQueue.push(node);
   }
   void runQueue();
+}
+
+function isStillProcessed(node: HTMLElement): boolean {
+  if (!node.hasAttribute(PROCESSED_ATTR)) {
+    return false;
+  }
+  return (
+    node.querySelector(".xenglish-wrapper") !== null ||
+    node.querySelector(".xenglish-error") !== null
+  );
 }
 
 async function runQueue(): Promise<void> {
@@ -66,12 +84,17 @@ async function runQueue(): Promise<void> {
   while (processingQueue.length > 0) {
     const node = processingQueue.shift();
     if (!node || !node.isConnected) {
+      if (node) {
+        inFlightSet.delete(node);
+      }
       continue;
     }
 
     const text = extractText(node);
     if (!text) {
+      inFlightSet.delete(node);
       node.removeAttribute(IN_FLIGHT_ATTR);
+      node.classList.remove(LOADING_CLASS);
       node.setAttribute(PROCESSED_ATTR, "1");
       continue;
     }
@@ -89,6 +112,7 @@ async function runQueue(): Promise<void> {
       node.setAttribute(PROCESSED_ATTR, "1");
       renderError(node, getErrorMessage(error));
     } finally {
+      inFlightSet.delete(node);
       node.classList.remove(LOADING_CLASS);
       node.removeAttribute(IN_FLIGHT_ATTR);
     }
@@ -96,6 +120,8 @@ async function runQueue(): Promise<void> {
 
   queueBusy = false;
 }
+
+let popoverCounter = 0;
 
 function renderProcessedText(targetNode: HTMLElement, result: ProcessResult): void {
   if (!result.englishText || result.chunks.length === 0) {
@@ -108,50 +134,89 @@ function renderProcessedText(targetNode: HTMLElement, result: ProcessResult): vo
 
   for (let index = 0; index < result.chunks.length; index += 1) {
     const chunk = result.chunks[index];
+    popoverCounter += 1;
+    const anchorName = `--xenglish-chunk-${popoverCounter}`;
+
     const chunkNode = document.createElement("span");
     chunkNode.className = "xenglish-chunk";
-    chunkNode.textContent = chunk.text;
-    chunkNode.dataset.ja = chunk.ja;
-    chunkNode.dataset.context = result.englishText;
-    chunkNode.dataset.chunk = chunk.text;
+    renderInlineContent(chunkNode, chunk.text);
+    chunkNode.style.setProperty("anchor-name", anchorName);
+
+    const popover = document.createElement("div");
+    popover.popover = "auto";
+    popover.className = "xenglish-popover";
+    popover.style.setProperty("position-anchor", anchorName);
+
+    const gloss = document.createElement("div");
+    gloss.className = "xenglish-popover-gloss";
+    gloss.textContent = chunk.ja;
+    popover.appendChild(gloss);
+
+    const hint = document.createElement("div");
+    hint.className = "xenglish-popover-hint";
+    hint.textContent = "クリックして質問";
+    popover.appendChild(hint);
+
+    popover.addEventListener("click", () => {
+      ensureQA(popover, result.englishText, chunk.text);
+    });
+
+    setupHover(chunkNode, popover);
+
     wrapper.appendChild(chunkNode);
+    wrapper.appendChild(popover);
 
     if (index !== result.chunks.length - 1) {
-      wrapper.appendChild(document.createTextNode(" "));
+      const nextText = result.chunks[index + 1].text;
+      if (!chunk.text.endsWith("\n") && !nextText.startsWith("\n")) {
+        wrapper.appendChild(document.createTextNode(" "));
+      }
     }
   }
 
-  targetNode.innerHTML = "";
+  targetNode.textContent = "";
   targetNode.appendChild(wrapper);
 }
 
-function renderError(targetNode: HTMLElement, message: string): void {
-  if (targetNode.querySelector(".xenglish-error")) {
-    return;
-  }
-  const errorNode = document.createElement("span");
-  errorNode.className = "xenglish-error";
-  errorNode.textContent = `xEnglish: ${message}`;
-  targetNode.appendChild(document.createElement("br"));
-  targetNode.appendChild(errorNode);
+function setupHover(chunkNode: HTMLElement, popover: HTMLElement): void {
+  let hideTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  const show = () => {
+    if (hideTimeout) {
+      clearTimeout(hideTimeout);
+      hideTimeout = null;
+    }
+    if (!popover.matches(":popover-open")) {
+      popover.showPopover();
+    }
+  };
+
+  const scheduleHide = () => {
+    hideTimeout = setTimeout(() => {
+      if (popover.matches(":popover-open")) {
+        popover.hidePopover();
+      }
+    }, 100);
+  };
+
+  chunkNode.addEventListener("mouseenter", show);
+  chunkNode.addEventListener("mouseleave", scheduleHide);
+  popover.addEventListener("mouseenter", show);
+  popover.addEventListener("mouseleave", scheduleHide);
 }
 
-function createTooltip(): { root: HTMLDivElement } {
-  const root = document.createElement("div");
-  root.className = "xenglish-tooltip-root";
+function ensureQA(popover: HTMLElement, englishText: string, chunkText: string): void {
+  if (popover.querySelector(".xenglish-qa")) {
+    return;
+  }
 
-  const gloss = document.createElement("div");
-  gloss.className = "xenglish-tooltip-gloss";
-  root.appendChild(gloss);
-
-  const hint = document.createElement("div");
-  hint.className = "xenglish-tooltip-hint";
-  hint.textContent = "クリックして文脈質問";
-  root.appendChild(hint);
+  const hint = popover.querySelector(".xenglish-popover-hint");
+  if (hint) {
+    hint.remove();
+  }
 
   const qa = document.createElement("div");
   qa.className = "xenglish-qa";
-  qa.hidden = true;
 
   const input = document.createElement("input");
   input.type = "text";
@@ -169,16 +234,7 @@ function createTooltip(): { root: HTMLDivElement } {
   answer.className = "xenglish-qa-answer";
   qa.appendChild(answer);
 
-  root.appendChild(qa);
-
-  const state: { chunkEl: HTMLElement | null } = {
-    chunkEl: null,
-  };
-
   button.addEventListener("click", async () => {
-    if (!state.chunkEl) {
-      return;
-    }
     const question = input.value.trim();
     if (!question) {
       return;
@@ -190,11 +246,7 @@ function createTooltip(): { root: HTMLDivElement } {
     try {
       const response = await sendMessage<AskResult>({
         type: "XENGLISH_ASK_QUESTION",
-        payload: {
-          englishText: state.chunkEl.dataset.context || "",
-          chunkText: state.chunkEl.dataset.chunk || "",
-          question,
-        },
+        payload: { englishText, chunkText, question },
       });
       answer.textContent = response.result.answer || "回答を取得できませんでした。";
     } catch (error: unknown) {
@@ -204,73 +256,72 @@ function createTooltip(): { root: HTMLDivElement } {
     }
   });
 
-  root.addEventListener("mouseleave", (event) => {
-    if (!event.relatedTarget || !root.contains(event.relatedTarget as Node)) {
-      hideTooltip(root, qa, input, answer, state);
-    }
-  });
-
-  root.addEventListener("click", () => {
-    qa.hidden = false;
-    input.focus();
-  });
-
-  document.addEventListener("mouseover", (event) => {
-    const chunkEl = findChunkElement(event.target);
-    if (!chunkEl) {
-      return;
-    }
-
-    state.chunkEl = chunkEl;
-    gloss.textContent = chunkEl.dataset.ja || "";
-    qa.hidden = true;
-    input.value = "";
-    answer.textContent = "";
-    positionTooltip(root, chunkEl);
-  });
-
-  document.addEventListener("mouseout", (event) => {
-    const fromChunk = findChunkElement(event.target);
-    if (!fromChunk) {
-      return;
-    }
-    const toNode = event.relatedTarget as Node | null;
-    if (toNode && (findChunkElement(toNode) || root.contains(toNode))) {
-      return;
-    }
-    hideTooltip(root, qa, input, answer, state);
-  });
-
-  return { root };
+  popover.appendChild(qa);
+  input.focus();
 }
 
-function hideTooltip(
-  root: HTMLDivElement,
-  qa: HTMLDivElement,
-  input: HTMLInputElement,
-  answer: HTMLDivElement,
-  state: { chunkEl: HTMLElement | null },
-): void {
-  root.style.display = "none";
-  qa.hidden = true;
-  input.value = "";
-  answer.textContent = "";
-  state.chunkEl = null;
-}
-
-function positionTooltip(root: HTMLDivElement, anchor: HTMLElement): void {
-  const rect = anchor.getBoundingClientRect();
-  root.style.display = "block";
-  root.style.left = `${window.scrollX + rect.left}px`;
-  root.style.top = `${window.scrollY + rect.bottom + 8}px`;
-}
-
-function findChunkElement(target: EventTarget | null): HTMLElement | null {
-  if (!(target instanceof Element)) {
-    return null;
+function renderError(targetNode: HTMLElement, message: string): void {
+  if (targetNode.querySelector(".xenglish-error")) {
+    return;
   }
-  const chunk = target.closest(CHUNK_SELECTOR);
-  return chunk instanceof HTMLElement ? chunk : null;
+  const errorNode = document.createElement("span");
+  errorNode.className = "xenglish-error";
+  errorNode.textContent = `xEnglish: ${message}`;
+  targetNode.appendChild(document.createElement("br"));
+  targetNode.appendChild(errorNode);
+}
+
+const INLINE_TOKEN = /(#[\p{L}\p{N}_]+|https?:\/\/\S+|\n)/gu;
+
+function renderInlineContent(parent: HTMLElement, text: string): void {
+  let lastIndex = 0;
+  for (const match of text.matchAll(INLINE_TOKEN)) {
+    const matchIndex = match.index;
+    if (matchIndex > lastIndex) {
+      parent.appendChild(document.createTextNode(text.slice(lastIndex, matchIndex)));
+    }
+
+    const token = match[0];
+    if (token === "\n") {
+      parent.appendChild(document.createElement("br"));
+    } else if (token.startsWith("#")) {
+      const span = document.createElement("span");
+      span.className = "xenglish-hashtag";
+      span.textContent = token;
+      parent.appendChild(span);
+    } else {
+      const cleanUrl = token.replace(/[.,;:!?)]+$/, "");
+      const trailing = token.slice(cleanUrl.length);
+
+      const link = document.createElement("a");
+      link.className = "xenglish-link";
+      link.href = cleanUrl;
+      link.textContent = formatLinkText(cleanUrl);
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      parent.appendChild(link);
+
+      if (trailing) {
+        parent.appendChild(document.createTextNode(trailing));
+      }
+    }
+
+    lastIndex = matchIndex + token.length;
+  }
+
+  if (lastIndex < text.length) {
+    parent.appendChild(document.createTextNode(text.slice(lastIndex)));
+  }
+}
+
+function formatLinkText(url: string): string {
+  try {
+    const u = new URL(url);
+    const display = `${u.hostname.replace(/^www\./, "")}${u.pathname.replace(/\/$/, "")}`;
+    return display.length > 30 ? `${display.slice(0, 30)}…` : display;
+  } catch {
+    return url;
+  }
 }
 
 function extractText(node: HTMLElement): string {
@@ -279,7 +330,11 @@ function extractText(node: HTMLElement): string {
   for (const br of brs) {
     br.replaceWith("\n");
   }
-  return (clone.textContent || "").replace(/\s+/g, " ").trim();
+  return (clone.textContent || "")
+    .replace(/[^\S\n]+/g, " ")
+    .replace(/ ?\n ?/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 async function sendMessage<T>(message: RuntimeMessage): Promise<{ ok: true; result: T }> {

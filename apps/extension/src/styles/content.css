@@ -3,12 +3,36 @@
 }
 
 .xenglish-chunk {
+  position: relative;
   border-bottom: 2px solid rgba(98, 177, 255, 0.2);
   transition: border-bottom-color 120ms ease;
 }
 
+/* Extend hover zone 8px below the chunk to bridge the gap to the popover */
+.xenglish-chunk::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 8px;
+}
+
 .xenglish-chunk:hover {
   border-bottom-color: rgba(64, 142, 247, 0.9);
+}
+
+.xenglish-hashtag {
+  color: rgb(29, 155, 240);
+}
+
+.xenglish-link {
+  color: rgb(29, 155, 240);
+  text-decoration: none;
+}
+
+.xenglish-link:hover {
+  text-decoration: underline;
 }
 
 .xenglish-error {
@@ -51,26 +75,30 @@
   }
 }
 
-.xenglish-tooltip-root {
-  position: absolute;
-  z-index: 2147483647;
-  max-width: 340px;
-  display: none;
+.xenglish-popover {
+  margin: 0;
   padding: 10px 12px;
+  max-width: 340px;
   border-radius: 10px;
   border: 1px solid rgba(81, 144, 255, 0.35);
   background: #f6fbff;
   color: #13263f;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
   font-size: 13px;
+
+  /* CSS Anchor Positioning */
+  position-area: bottom span-right;
+  position-try-fallbacks: flip-block;
+  inset: unset;
+  margin-top: 8px;
 }
 
-.xenglish-tooltip-gloss {
+.xenglish-popover-gloss {
   font-size: 13px;
   font-weight: 600;
 }
 
-.xenglish-tooltip-hint {
+.xenglish-popover-hint {
   margin-top: 6px;
   font-size: 11px;
   color: #4e6b8f;

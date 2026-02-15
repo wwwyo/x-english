@@ -70,6 +70,8 @@ function buildProcessPrompt(text: string): string {
     "- Keep phrasal verbs as one unit.",
     "- Do NOT split into individual words.",
     "- Separate major adjuncts (e.g., prepositional phrases, participle phrases, condition clauses).",
+    "- Preserve line breaks (\\n) from the original text. Place them at the end of the chunk that precedes the break.",
+    "- Keep hashtags (#word) and URLs (https://...) exactly as-is without translating or modifying them.",
     "",
     "Also provide Japanese gloss for each chunk.",
     "",

@@ -16,10 +16,6 @@ export default defineConfig({
       background: {
         service_worker: "background.js",
       },
-      options_ui: {
-        page: "options.html",
-        open_in_tab: true,
-      },
     };
   },
 });
